@@ -82,6 +82,15 @@ class AuthRepositoryImpl implements AuthRepository {
         isDemoMode: false,
       );
     } on ApiException catch (e) {
+      if (e.statusCode == 404) {
+        throw const ApiException(
+          type: ApiErrorType.unauthorized,
+          statusCode: 401,
+          message:
+              'Invalid credentials. Please verify your Email/Employee ID and password.',
+        );
+      }
+
       // Fall back to local dummy credentials on network connectivity failures
       // or when the Postman Mock Server URL is unconfigured.
       if (e.isConnectivityIssue || e.type == ApiErrorType.unconfiguredMock) {

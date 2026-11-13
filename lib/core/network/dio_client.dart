@@ -53,6 +53,8 @@ class DioClient {
   /// can expire active sessions when a protected endpoint rejects the token.
   Stream<ApiException> get unauthorizedEvents => _unauthorizedController.stream;
 
+  String get baseUrl => _dio.options.baseUrl;
+
   void close() {
     if (!_unauthorizedController.isClosed) {
       _unauthorizedController.close();
@@ -214,6 +216,11 @@ class DioClient {
 
   String? _extractMessage(dynamic data) {
     if (data is Map<String, dynamic>) {
+      final err = data['error'];
+      if (err is Map<String, dynamic>) {
+        final nestedMsg = err['message'];
+        if (nestedMsg is String && nestedMsg.trim().isNotEmpty) return nestedMsg;
+      }
       final msg = data['message'] ?? data['error'] ?? data['detail'];
       if (msg is String && msg.trim().isNotEmpty) return msg;
     }

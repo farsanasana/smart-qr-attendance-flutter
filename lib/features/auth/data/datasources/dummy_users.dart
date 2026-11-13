@@ -56,6 +56,20 @@ class DummyUsers {
       .map((a) => a.user)
       .toList();
 
+  /// Resolves an identifier (either email or Employee ID like EMP001/ADM001)
+  /// to the standard registered email address.
+  static String resolveEmail(String identifier) {
+    final trimmed = identifier.trim();
+    if (trimmed.contains('@')) return trimmed;
+    final normalized = trimmed.toLowerCase();
+    for (final account in accounts) {
+      if (account.user.id.toLowerCase() == normalized) {
+        return account.user.email;
+      }
+    }
+    return trimmed;
+  }
+
   static DemoAccount? authenticate(String identifier, String password) {
     final normalized = identifier.trim().toLowerCase();
     for (final account in accounts) {

@@ -222,6 +222,61 @@ void main() {
       expect(result.user.id, 'EMP001');
       expect(result.token, 'jwt-123');
     });
+
+    test('sends strictly email and password in POST /login body matching Postman example', () async {
+      RequestOptions? capturedOptions;
+      final client = _buildMockedDioClient((options) {
+        capturedOptions = options;
+        return _jsonResponse({
+          'token': 'jwt-123',
+          'user': {
+            'id': 'EMP001',
+            'name': 'Rahul',
+            'email': 'rahul@gmail.com',
+            'role': 'employee',
+          },
+        }, 200);
+      });
+      final service = AuthApiService(client);
+      await service.login(
+        identifier: 'rahul@gmail.com',
+        password: '123456',
+      );
+
+      expect(capturedOptions?.method, 'POST');
+      expect(capturedOptions?.path, '/login');
+      expect(capturedOptions?.data, {
+        'email': 'rahul@gmail.com',
+        'password': '123456',
+      });
+      expect((capturedOptions?.data as Map).containsKey('identifier'), isFalse);
+    });
+
+    test('resolves employee ID EMP001 to email rahul@gmail.com for Postman mock matching', () async {
+      RequestOptions? capturedOptions;
+      final client = _buildMockedDioClient((options) {
+        capturedOptions = options;
+        return _jsonResponse({
+          'token': 'jwt-123',
+          'user': {
+            'id': 'EMP001',
+            'name': 'Rahul',
+            'email': 'rahul@gmail.com',
+            'role': 'employee',
+          },
+        }, 200);
+      });
+      final service = AuthApiService(client);
+      await service.login(
+        identifier: 'EMP001',
+        password: '123456',
+      );
+
+      expect(capturedOptions?.data, {
+        'email': 'rahul@gmail.com',
+        'password': '123456',
+      });
+    });
   });
 
   group('AuthRepositoryImpl mock server & demo account logins', () {

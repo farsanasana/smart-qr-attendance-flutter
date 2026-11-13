@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:newwone/core/config/api_config.dart';
 import 'package:newwone/core/network/api_exception.dart';
 import 'package:newwone/core/network/dio_client.dart';
+import 'package:newwone/features/auth/data/datasources/dummy_users.dart';
 import 'package:newwone/features/auth/data/models/user_model.dart';
 
 /// REST API service for authentication endpoints.
@@ -11,19 +13,33 @@ class AuthApiService {
 
   final DioClient _client;
 
-  /// Calls `POST /login` with identifier (Employee ID or Email) and password.
+  /// Calls `POST /login` with email and password strictly matching Postman mock request body.
   Future<({UserModel user, String token})> login({
     required String identifier,
     required String password,
   }) async {
+    final email = DummyUsers.resolveEmail(identifier);
+    final requestData = <String, dynamic>{
+      'email': email,
+      'password': password,
+    };
+
+    if (kDebugMode) {
+      debugPrint(
+        '[AUTH_DEBUG] POST /login request: url=${_client.baseUrl}${ApiConfig.loginEndpoint}, headers={Accept: application/json, Content-Type: application/json}, body=$requestData',
+      );
+    }
+
     final response = await _client.post<dynamic>(
       ApiConfig.loginEndpoint,
-      data: {
-        'identifier': identifier.trim(),
-        'email': identifier.trim(),
-        'password': password,
-      },
+      data: requestData,
     );
+
+    if (kDebugMode) {
+      debugPrint(
+        '[AUTH_DEBUG] POST /login response status=${response.statusCode}, body=${response.data}',
+      );
+    }
 
     final body = _parseResponseMap(response.data);
     if (body == null || body.isEmpty) {
